@@ -23,6 +23,16 @@ public:
       std::cout << Descs << std::endl;
       return 0;
     }
+
+    if (ProgramOptions.count("input") == 0) {
+      std::cout << "Exiting: Input file not specified!\n";
+      return 1;
+    }
+
+    if (ProgramOptions.count("output") == 0) {
+      std::cout << "Exiting: Output file not specified!\n";
+      return 1;
+    }
     return 0;
   }
 
