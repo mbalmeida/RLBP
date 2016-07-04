@@ -219,6 +219,27 @@ public:
       return 1;
     }
 
+    // Load an image and automatically convert it to grayscale as required by
+    // RLBP.
+    cv::Mat img = cv::imread(InputPath, cv::IMREAD_GRAYSCALE);
+    if (!img.data) {
+      std::cout << "Exiting: Error loading input image: " << InputPath << "\n";
+      return 1;
+    }
+
+    RLBP rlbp("RLBP", "Robust Local Binary Pattern");
+    rlbp.setVerbose(false);
+    rlbp.addInput(img);
+    rlbp.Run();
+
+    cv::Mat histogram = plotHistogram(rlbp.GetReductionData(), 512, 512, 59);
+    try {
+      cv::imwrite(OutputPath, histogram);
+    } catch(std::exception& e) {
+      std::cout << "Exiting: Error writing out histogram\n";
+      return 1;
+    }
+
     return 0;
   }
 
@@ -227,6 +248,25 @@ public:
   ~Application() { }
 
   Application operator=(Application a) = delete;
+private:
+  cv::Mat plotHistogram(const std::vector<int64_t>& data, int width, int height,
+                        int bins)
+  {
+    cv::Mat histogram(height, width, CV_8UC1, cv::Scalar(0,0,0));
+    int bin_width = (int)(float) width / bins;
+    int64_t max = *std::max_element(data.begin(), data.end());
+    int64_t min = *std::min_element(data.begin(), data.end());
+    for (int i = 1; i < bins; ++i) {
+      // Rescale the histogram
+      int h0 = int((double(data[i-1])/max)*height);
+      int h1 = int((double(data[i])/max)*height);
+      cv::line(histogram, cv::Point(bin_width * (i-1), height - h0),
+                          cv::Point(bin_width * i, height - h1),
+                          cv::Scalar(255, 0, 0), 2, CV_AA, 0);
+    }
+    return histogram;
+  }
+
 private:
   boost::program_options::variables_map ProgramOptions;
   boost::program_options::options_description Descs;
