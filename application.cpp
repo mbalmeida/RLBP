@@ -196,7 +196,9 @@ public:
       ("input,i", boost::program_options::value<std::string>(&InputPath),
        "Path to input file")
       ("output,o", boost::program_options::value<std::string>(&OutputPath),
-       "Path to output file");
+       "Path to output file")
+      ("visualise", "Visualise the histogram before writing it to disk")
+      ("verbose", "Verbose mode: Dump more information like execution times.");
     boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(Descs).run(),
           ProgramOptions);
     boost::program_options::notify(ProgramOptions);
@@ -204,6 +206,8 @@ public:
 
   int Run()
   {
+    visualise = ProgramOptions.count("visualise");
+    verbose = ProgramOptions.count("verbose");
     if (ProgramOptions.count("help")) {
       std::cout << Descs << std::endl;
       return 0;
@@ -228,11 +232,15 @@ public:
     }
 
     RLBP rlbp("RLBP", "Robust Local Binary Pattern");
-    rlbp.setVerbose(false);
+    rlbp.setVerbose(verbose);
     rlbp.addInput(img);
     rlbp.Run();
 
     cv::Mat histogram = plotHistogram(rlbp.GetReductionData(), 512, 512, 59);
+    if (visualise) {
+      cv::imshow("Histogram", histogram);
+      cv::waitKey();
+    }
     try {
       cv::imwrite(OutputPath, histogram);
     } catch(std::exception& e) {
@@ -272,6 +280,8 @@ private:
   boost::program_options::options_description Descs;
   std::string InputPath;
   std::string OutputPath;
+  bool visualise;
+  bool verbose;
 };
 
 int main(int argc, char** argv)
