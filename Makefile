@@ -6,7 +6,7 @@ CCFLAGS = -w -Wall -O -std=c++11
 EXEC = RLBP
 SOURCES = $(wildcard *.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
-LDFLAGS = -lboost_program_options
+LDFLAGS = -lboost_program_options -lopencv_highgui -lopencv_core
 
 # Main target
 $(EXEC): $(OBJECTS)
